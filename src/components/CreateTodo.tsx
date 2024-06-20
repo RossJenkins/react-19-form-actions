@@ -1,12 +1,12 @@
-import { FC } from 'react';
+import { FC, PropsWithChildren } from 'react';
 import { useFormStatus } from 'react-dom';
 
-const SubmitButton = () => {
+const SubmitButton: FC<PropsWithChildren> = ({ children }) => {
     const { pending } = useFormStatus();
 
     return (
         <button type="submit" disabled={pending}>
-            Create todo
+            {children}
         </button>
     );
 };
@@ -33,7 +33,9 @@ export const CreateTodo: FC<CreateTodoProps> = ({ createTodoAction, isPending, i
             placeholder="Description"
             required={true}
         />
-        <SubmitButton/>
+        <SubmitButton>
+            Create todo
+        </SubmitButton>
         {isPending && <div className="creating">Adding...</div>}
         {isError && <div className="error">Something went wrong...</div>}
     </form>
