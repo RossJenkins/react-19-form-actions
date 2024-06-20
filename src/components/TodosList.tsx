@@ -1,6 +1,6 @@
-import { Todo } from '../api/todo.ts';
 import { ChangeEvent, FC, useState } from 'react';
-import todosSvc from '../api/todosSvc.ts';
+import { Todo } from '../api/todo';
+import todosSvc from '../api/todosSvc';
 import classnames from 'classnames';
 
 interface TodoItemProps {

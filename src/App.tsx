@@ -2,8 +2,7 @@ import './App.css';
 import { useEffect, useState } from 'react';
 import { Todo } from './api/todo';
 import todosSvc from './api/todosSvc';
-import { TodosList } from './components/TodosList.tsx';
-import { CreateTodo } from './components/CreateTodo.tsx';
+import { Todos } from './components/Todos';
 
 function App() {
     const [todos, setTodos] = useState<Todo[]>([]);
@@ -26,10 +25,7 @@ function App() {
                     <h2>Loading...</h2>
                 </div>
             ) : (
-                <>
-                    <TodosList todos={todos} />
-                    <CreateTodo addTodo={(todo) => setTodos([...todos, todo])} />
-                </>
+                <Todos initialTodos={todos} />
             )}
         </div>
     );
