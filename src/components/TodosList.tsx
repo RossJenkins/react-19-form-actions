@@ -8,7 +8,6 @@ interface TodoItemProps {
 }
 
 export const TodoItem: FC<TodoItemProps> = ({ todo }) => {
-    // todo useTransition and useOptimistic here too 👀
     const [isCompleted, setIsCompleted] = useState(todo.completed);
     const [completedAt, setCompletedAt] = useState(todo.completedAt);
     const [isCompleting, setIsCompleting] = useState(false);
@@ -18,16 +17,13 @@ export const TodoItem: FC<TodoItemProps> = ({ todo }) => {
         const isCompleted = event.target.checked;
         setIsCompleting(true);
         setIsCompleted(isCompleted);
+        setCompletedAt(completedAt);
 
-        try {
-            const updatedTodo = await todosSvc.completeTodo(todo.id, event.target.checked, completedAt);
+        const updatedTodo = await todosSvc.completeTodo(todo.id, isCompleted, completedAt);
 
-            setCompletedAt(updatedTodo.completedAt);
-        } catch (e) {
-            setIsCompleted(!isCompleted);
-        } finally {
-            setIsCompleting(false);
-        }
+        setIsCompleted(updatedTodo.completed);
+        setCompletedAt(updatedTodo.completedAt);
+        setIsCompleting(false);
     };
 
     return (
