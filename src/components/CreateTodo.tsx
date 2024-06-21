@@ -19,16 +19,17 @@ export const CreateTodo: FC<CreateTodoProps> = ({ addTodo }) => {
         setIsError(false);
 
         try {
-            addTodo(await todosSvc.createTodo({
-                id: uuid(),
-                title,
-                description,
-                completed: false
-            }));
+            addTodo(
+                await todosSvc.createTodo({
+                    id: uuid(),
+                    title,
+                    description,
+                    completed: false,
+                }),
+            );
         } catch (e) {
             setIsError(true);
-        }
-        finally {
+        } finally {
             setIsCreating(false);
         }
     };
