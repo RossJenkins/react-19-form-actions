@@ -1,15 +1,5 @@
-import { FC, PropsWithChildren } from 'react';
-import { useFormStatus } from 'react-dom';
-
-const SubmitButton: FC<PropsWithChildren> = ({ children }) => {
-    const { pending } = useFormStatus();
-
-    return (
-        <button type="submit" disabled={pending}>
-            {children}
-        </button>
-    );
-};
+import { FC } from 'react';
+import { SubmitButton } from './SubmitButton';
 
 interface CreateTodoProps {
     createTodoAction: (formData: FormData) => void;
