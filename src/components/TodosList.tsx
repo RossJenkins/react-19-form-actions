@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useState } from 'react';
+import { ChangeEvent, FC, useOptimistic, useState, useTransition } from 'react';
 import { Todo } from '../api/todo';
 import todosSvc from '../api/todosSvc';
 import classnames from 'classnames';
@@ -8,40 +8,49 @@ interface TodoItemProps {
 }
 
 export const TodoItem: FC<TodoItemProps> = ({ todo }) => {
-    // todo useTransition and useOptimistic here too 👀
-    const [isCompleted, setIsCompleted] = useState(todo.completed);
     const [completedAt, setCompletedAt] = useState(todo.completedAt);
-    const [isCompleting, setIsCompleting] = useState(false);
+    const [isCompleted, setIsCompleted] = useState(todo.completed);
+
+    const [optimisticCompletedAt, setOptimisticCompletedAt] = useOptimistic(completedAt);
+    const [optimisticCompleted, setOptimisticCompleted] = useOptimistic(isCompleted);
+
+    const [isPending, startTransition] = useTransition();
 
     const onTodoToggled = async (event: ChangeEvent<HTMLInputElement>) => {
-        const completedAt = new Date().toISOString();
-        const isCompleted = event.target.checked;
-        setIsCompleting(true);
-        setIsCompleted(isCompleted);
+        startTransition(async () => {
+            const completedAt = new Date().toISOString();
+            const isCompleted = event.target.checked;
 
-        try {
-            const updatedTodo = await todosSvc.completeTodo(todo.id, event.target.checked, completedAt);
+            setOptimisticCompletedAt(completedAt);
+            setOptimisticCompleted(isCompleted);
 
-            setCompletedAt(updatedTodo.completedAt);
-        } catch (e) {
-            setIsCompleted(!isCompleted);
-        } finally {
-            setIsCompleting(false);
-        }
+            try {
+                const updatedTodo = await todosSvc.completeTodo(todo.id, isCompleted, completedAt);
+
+                startTransition(() => {
+                   setIsCompleted(updatedTodo.completed);
+                   setCompletedAt(updatedTodo.completedAt);
+                });
+            } catch (e) {
+                startTransition(() => {
+                    setOptimisticCompleted(!isCompleted);
+                });
+            }
+        });
     };
 
     return (
         <li className="todo-item">
             <div className="todo-details">
-                <h4 className={classnames(isCompleted && 'completed-text')}>{todo.title}</h4>
-                <p className={classnames(isCompleted && 'completed-text')}>{todo.description}</p>
-                {isCompleted && completedAt && <i>Completed at {completedAt}</i>}
+                <h4 className={classnames(optimisticCompleted && 'completed-text')}>{todo.title}</h4>
+                <p className={classnames(optimisticCompleted && 'completed-text')}>{todo.description}</p>
+                {optimisticCompleted && optimisticCompletedAt && <i>Completed at {optimisticCompletedAt}</i>}
             </div>
             <input
                 type="checkbox"
                 className="todo-completed"
-                checked={isCompleted}
-                disabled={isCompleting}
+                checked={optimisticCompleted}
+                disabled={isPending}
                 onChange={onTodoToggled}
             />
         </li>
