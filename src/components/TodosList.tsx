@@ -24,18 +24,12 @@ export const TodoItem: FC<TodoItemProps> = ({ todo }) => {
             setOptimisticCompletedAt(completedAt);
             setOptimisticCompleted(isCompleted);
 
-            try {
-                const updatedTodo = await todosSvc.completeTodo(todo.id, isCompleted, completedAt);
+            const updatedTodo = await todosSvc.completeTodo(todo.id, isCompleted, completedAt);
 
-                startTransition(() => {
-                   setIsCompleted(updatedTodo.completed);
-                   setCompletedAt(updatedTodo.completedAt);
-                });
-            } catch (e) {
-                startTransition(() => {
-                    setOptimisticCompleted(!isCompleted);
-                });
-            }
+            startTransition(() => {
+                setIsCompleted(updatedTodo.completed);
+                setCompletedAt(updatedTodo.completedAt);
+            });
         });
     };
 
