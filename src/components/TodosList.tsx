@@ -1,6 +1,6 @@
-import { Todo } from '../api/todo.ts';
-import { ChangeEvent, FC, useState } from 'react';
-import todosSvc from '../api/todosSvc.ts';
+import { ChangeEvent, FC, useOptimistic, useState, useTransition } from 'react';
+import { Todo } from '../api/todo';
+import todosSvc from '../api/todosSvc';
 import classnames from 'classnames';
 
 interface TodoItemProps {
@@ -8,36 +8,43 @@ interface TodoItemProps {
 }
 
 export const TodoItem: FC<TodoItemProps> = ({ todo }) => {
-    const [isCompleted, setIsCompleted] = useState(todo.completed);
     const [completedAt, setCompletedAt] = useState(todo.completedAt);
-    const [isCompleting, setIsCompleting] = useState(false);
+    const [isCompleted, setIsCompleted] = useState(todo.completed);
+
+    const [optimisticCompletedAt, setOptimisticCompletedAt] = useOptimistic(completedAt);
+    const [optimisticCompleted, setOptimisticCompleted] = useOptimistic(isCompleted);
+
+    const [isPending, startTransition] = useTransition();
 
     const onTodoToggled = async (event: ChangeEvent<HTMLInputElement>) => {
-        const completedAt = new Date().toISOString();
-        const isCompleted = event.target.checked;
-        setIsCompleting(true);
-        setIsCompleted(isCompleted);
-        setCompletedAt(completedAt);
+        startTransition(async () => {
+            const completedAt = new Date().toISOString();
+            const isCompleted = event.target.checked;
 
-        const updatedTodo = await todosSvc.completeTodo(todo.id, isCompleted, completedAt);
+            setOptimisticCompletedAt(completedAt);
+            setOptimisticCompleted(isCompleted);
 
-        setIsCompleted(updatedTodo.completed);
-        setCompletedAt(updatedTodo.completedAt);
-        setIsCompleting(false);
+            const updatedTodo = await todosSvc.completeTodo(todo.id, isCompleted, completedAt);
+
+            startTransition(() => {
+                setIsCompleted(updatedTodo.completed);
+                setCompletedAt(updatedTodo.completedAt);
+            });
+        });
     };
 
     return (
         <li className="todo-item">
             <div className="todo-details">
-                <h4 className={classnames(isCompleted && 'completed-text')}>{todo.title}</h4>
-                <p className={classnames(isCompleted && 'completed-text')}>{todo.description}</p>
-                {isCompleted && completedAt && <i>Completed at {completedAt}</i>}
+                <h4 className={classnames(optimisticCompleted && 'completed-text')}>{todo.title}</h4>
+                <p className={classnames(optimisticCompleted && 'completed-text')}>{todo.description}</p>
+                {optimisticCompleted && optimisticCompletedAt && <i>Completed at {optimisticCompletedAt}</i>}
             </div>
             <input
                 type="checkbox"
                 className="todo-completed"
-                checked={isCompleted}
-                disabled={isCompleting}
+                checked={optimisticCompleted}
+                disabled={isPending}
                 onChange={onTodoToggled}
             />
         </li>
